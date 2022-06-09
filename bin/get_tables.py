@@ -18,7 +18,6 @@ raw_df = pd.read_excel(
 le = preprocessing.LabelEncoder()
 raw_df["Sequence"] = le.fit_transform(raw_df["Sequence"])
 
-
 # 1: only highest frequency alleles
 
 # List of all STRs - Samples
