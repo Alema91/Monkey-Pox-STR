@@ -12,3 +12,7 @@ The `bin` folder contains all the scripts used for analysis.
 ## Environment
 
 The conda environment used for this analysis is the following
+
+* python
+* pandas
+* sklearn
