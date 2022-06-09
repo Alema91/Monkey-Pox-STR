@@ -1,33 +1,35 @@
-	STR2	STR7	STR9	STR5	STR1	STR4	STR3	STR8
-352_R	143	52	305	116	None	None	None	217
-395	142	52	None	None	None	None	None	217
-399	142	52	305	None	None	None	None	217
-403	None	52	305	None	None	None	None	217
-407	None	52	None	None	None	None	None	None
-351_R	None	52	305	113	None	None	None	217
-411	None	52	305	None	None	None	None	217
-415	146	52	305	None	None	None	None	217
-416	143	52	305	None	None	None	None	217
-417	None	52	305	None	None	None	None	217
-418	None	52	305	None	None	None	None	217
-419	None	52	305	None	None	None	None	217
-420	None	52	305	None	None	None	None	217
-350_R	None	52	305	None	None	None	None	217
-431	143	52	305	111	None	None	None	217
-435	None	None	None	None	None	None	None	217
-438	None	52	None	None	None	None	None	None
-441	None	52	305	None	None	None	None	217
-353_R	141	52	305	113	None	None	100	217
-453	None	52	305	None	None	None	None	217
-457	146	52	305	None	None	None	None	217
-345_R	None	52	305	None	None	None	None	217
-345	None	None	None	None	None	None	None	217
-349_R	141	52	305	115	None	118	None	217
-347	None	None	None	None	None	None	None	217
-349	None	52	305	None	None	None	None	217
-350	None	52	None	None	None	None	None	None
-351	None	52	305	None	None	None	None	217
-352	None	52	None	None	None	None	None	217
-353	None	52	305	113	None	None	None	217
-353_R_miseq	139	52	305	113	0	117	101	217
-347_R	145	52	305	None	None	None	None	217
+	STR10	STR4	STR1	STR7	STR11	STR9	STR3	STR5	STR8	STR2
+390	None	None	None	219	None	None	None	None	None	None
+349_R	92	548	115	247	382	1009	492	530	814	611
+395	92	None	None	247	382	1009	None	None	814	613
+399	92	None	None	247	382	1009	None	None	814	611
+403	92	None	None	247	382	1009	None	529	814	616
+407	92	None	None	247	382	1009	None	None	814	618
+353_R_novaseq	91	549	116	247	386	1009	491	530	814	609
+411	92	None	None	247	382	1009	None	532	814	None
+415	92	None	None	247	382	1009	None	None	814	613
+416	92	None	None	247	382	1009	None	524	814	609
+417	92	None	None	247	382	1009	489	531	814	613
+418	92	None	None	247	382	1009	None	530	814	618
+419	92	None	None	247	380	1009	None	531	814	616
+420	92	None	None	247	382	1009	None	None	814	618
+352_R	92	None	None	247	382	1009	None	532	814	616
+431	91	None	None	247	386	1009	None	527	814	613
+351_R	92	None	118	247	382	1009	None	530	814	613
+435	92	None	None	247	382	1009	None	None	814	620
+438	93	None	None	247	380	1009	None	530	814	611
+441	92	None	None	247	382	1009	None	None	814	None
+353_novaseq	None	None	None	247	386	1009	None	529	814	611
+447	None	None	None	247	None	None	None	533	814	None
+453	92	None	None	247	382	1009	None	529	814	None
+457	92	None	None	247	382	1009	None	None	814	630
+347_R	92	None	113	247	382	1009	None	530	814	618
+345	None	None	None	247	382	None	None	None	814	None
+347	None	None	None	247	382	None	None	532	814	None
+349	92	None	None	247	382	1009	None	528	814	None
+350	None	None	None	247	None	None	None	None	814	None
+351	92	None	None	247	382	1009	None	530	814	609
+352	92	None	None	247	382	1009	None	None	814	626
+353_R_miseq	91	546	122	247	386	1009	493	529	814	609
+350_R	92	548	None	247	382	1009	None	None	814	618
+353_R_nanopore	73	570	110	247	419	1009	499	516	814	609
