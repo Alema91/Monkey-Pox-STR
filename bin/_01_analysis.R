@@ -14,8 +14,7 @@ library(forcats, quietly = TRUE, warn.conflicts = FALSE)
 library(gridExtra, quietly = TRUE, warn.conflicts = FALSE)
 library(patchwork, quietly = TRUE, warn.conflicts = FALSE)
 library(reshape2, quietly = TRUE, warn.conflicts = FALSE)
-
-install.packages("FactoMineR")
+library(ggfortify, quietly = TRUE, warn.conflicts = FALSE)
 
 # data --------
 
@@ -73,14 +72,15 @@ summary(modelo_pca1)
 
 # matrix con los valores de STR y muestras
 
-datos <- read.csv2("Data/xsample_ySTR.tsv", sep = "\t", stringsAsFactors = F)
+datos <- read.csv2("bin/abundant_alelles.tsv", sep = "\t")
+colnames(datos)
 
 # tengo que cambiar la tabla a long y despues otra vez a wide
 
-df_melt <- melt(datos, id.var = c("sequences"))
+df_melt <- melt(datos, id.var = c("X"))
 df_melt$value <- as.numeric(as.factor(df_melt$value))
 
-df_wide <- pivot_wider(df_melt, names_from = "variable", values_from = "value", id_cols = "sequences")
+df_wide <- pivot_wider(df_melt, names_from = "variable", values_from = "value", id_cols = "X")
 
 # Intento de PCA
 
@@ -95,13 +95,13 @@ summary(modelo_pca1)
 
 # Plot PCA
 
-autoplot(modelo_pca1, data = df_wide, loadings.label = TRUE, loadings.label.size = 3, loadings = TRUE, colour = "sequences", shape = T, label = T, label.size = 2.5)
-ggsave("Plots/pca_str_samples.png", width = 18, height = 18, dpi = 300, units = c("cm"))
+autoplot(modelo_pca1, data = df_wide, loadings.label = TRUE, loadings.label.size = 3, loadings = TRUE, shape = T, label = T, label.size = 2.5)
+ggsave("plots/pca_str_samples.png", width = 18, height = 18, dpi = 300, units = c("cm"))
 
 # heatmap
 
 heatmap(matrix_table)
-ggsave("Plots/heatmap_str_samples.png", width = 18, height = 18, dpi = 300, units = c("cm"))
+ggsave("plots/heatmap_str_samples.png", width = 18, height = 18, dpi = 300, units = c("cm"))
 
 # intento de hierathical clustering
 
@@ -111,7 +111,7 @@ matrix_table <- as.matrix(df_wide[, -1])
 row.names(matrix_table) <- as.character(df_wide[, 1])
 
 # Finding distance matrix
-distance_mat <- dist(matrix_table, method = "minkowski")
+distance_mat <- dist(matrix_table, method = "euclidean")
 
 # Fitting Hierarchical clustering Model
 # to training dataset
@@ -121,3 +121,6 @@ hier_cl
 
 # Plotting dendrogram
 plot(hier_cl)
+
+# plot heatmap
+heatmap(matrix_table)
