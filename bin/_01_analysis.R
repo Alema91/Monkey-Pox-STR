@@ -17,17 +17,18 @@ library(reshape2, quietly = TRUE, warn.conflicts = FALSE)
 library(ggfortify, quietly = TRUE, warn.conflicts = FALSE)
 library(pheatmap, quietly = TRUE, warn.conflicts = FALSE)
 
-install.packages("d3heatmap")
-
 # matrix con los valores de STR y muestras
 
 datos <- read.csv2("bin/abundant_alelles.tsv", sep = "\t")
-colnames(datos)
+reformat_datos <- datos[, -c(1, 4)]
+head(datos)
 
 # tengo que cambiar la tabla a long y despues otra vez a wide
 
 df_melt <- melt(datos, id.var = c("X"))
 df_melt$value <- as.numeric(as.factor(df_melt$value))
+
+table(df_melt$value)
 
 df_wide <- pivot_wider(df_melt, names_from = "variable", values_from = "value", id_cols = "X")
 
@@ -50,7 +51,6 @@ ggsave("plots/pca_str_samples.png", width = 18, height = 18, dpi = 300, units = 
 # heatmap
 
 heatmap(matrix_table)
-ggsave("plots/heatmap_str_samples.png", width = 18, height = 18, dpi = 300, units = c("cm"))
 
 # intento de hierathical clustering
 
@@ -72,6 +72,6 @@ hier_cl
 plot(hier_cl)
 
 # plot heatmap
-png(file = "/home/alberto.lema/Documents/Desarrollo/Monkey-Pox-analysis/plots/heatmap.png", width = 600, height = 350)
+png(file = "/home/alberto.lema/Documents/Desarrollo/Monkey-Pox-analysis/plots/eeeheatmap.png", width = 600, height = 350)
 pheatmap(matrix_table, cluster_rows = T, cluster_cols = T)
 dev.off()
