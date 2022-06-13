@@ -9,3 +9,10 @@ plots
 # Outdate data
 
 outdate_data
+
+# files
+.tsv
+.csv
+.png
+.xlsx
+-json
