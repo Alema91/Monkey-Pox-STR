@@ -15,7 +15,9 @@ library(patchwork, quietly = TRUE, warn.conflicts = FALSE)
 library(reshape2, quietly = TRUE, warn.conflicts = FALSE)
 library(ggfortify, quietly = TRUE, warn.conflicts = FALSE)
 library(pheatmap, quietly = TRUE, warn.conflicts = FALSE)
+library(viridis, quietly = TRUE, warn.conflicts = FALSE)
 
+colorRampPalette(c("navy", "white", "firebrick3"))(50)
 # utilidades
 # indx <- sapply(numeric_datos, is.factor)
 # numeric_datos[indx] <- lapply(numeric_datos[indx], function(x) as.numeric(as.character(x)))
@@ -56,20 +58,32 @@ df_sep_sp <- data.frame(
 )
 
 id_str <- unique(df_sep_sp$STR)
-rownames(tmp_matrix) <- muestras
 for (i in 1:length(id_str)) {
     tmp_df <- df_sep_sp[df_sep_sp$STR == id_str[i], ]
+    alelos_tmp <- as.character(unique(tmp_df$STR_alelles))
+    color_tmp <- colorRampPalette(c("navy", "white", "firebrick3"))(length(alelos_tmp))
     tmp_df_wide <- data.frame(pivot_wider(tmp_df, names_from = "STR_alelles", values_from = "CLR", id_cols = "sample"))
     tmp_matrix <- tmp_df_wide[, -1]
+    rownames(tmp_matrix) <- muestras
     indx <- sapply(tmp_matrix, is.character) # transform to numeric
     tmp_matrix[indx] <- lapply(tmp_matrix[indx], function(x) as.numeric(x))
     nombre_str <- as.character(id_str[i])
     ruta <- paste0("/home/alberto.lema/Documents/Desarrollo/Monkey-Pox-analysis/plots/", nombre_str, ".png")
     # heatmap by STR
     png(file = ruta, width = 600, height = 350)
-    pheatmap(tmp_matrix, show_rownames = T, show_colnames = F)
+    pheatmap(tmp_matrix, show_rownames = T, show_colnames = F, color = color_tmp)
     dev.off()
 }
+
+# prueba con STR11
+
+df_str11 <- df_sep_sp[df_sep_sp$STR == "STR11", ]
+alelos_str11 <- as.character(unique(df_str11$STR_alelles))
+color_str11 <- colorRampPalette(c("navy", "white", "firebrick3"))(length(alelos_str11))
+
+png(file = "/home/alberto.lema/Documents/Desarrollo/Monkey-Pox-analysis/plots/STR11.png", width = 600, height = 350)
+pheatmap(tmp_matrix, show_rownames = T, show_colnames = F, color = color_str11)
+dev.off()
 
 # PCA
 modelo_pca1 <- prcomp(matrix_sp, scale = FALSE)
