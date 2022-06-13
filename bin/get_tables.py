@@ -142,7 +142,7 @@ df_mostfreqalleles_freqs.to_csv("02-most_frequent_alleles_freqs.tsv")
 # tables for all alleles
 df_alleles_binary, df_alleles_freq = all_alleles(renamed_df, "AlleleFrequency")
 df_alleles_binary.to_csv("03-all_alleles_presence.tsv", sep="\t")
-df_alleles_binary.to_csv("04-all_alleles_relfreq.tsv", sep="\t")
+df_alleles_freq.to_csv("04-all_alleles_relfreq.tsv", sep="\t")
 
 # table for all alleles by supporting reads
 df_alleles_supporting_reads = all_alleles(renamed_df, "Supporting_reads")[1]
