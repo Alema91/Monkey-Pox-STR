@@ -15,4 +15,4 @@ The conda environment used for this analysis is the following
 
 * python
 * pandas
-* sklearn
+* composition_stats
