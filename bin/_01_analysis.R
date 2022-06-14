@@ -17,6 +17,8 @@ library(ggfortify, quietly = TRUE, warn.conflicts = FALSE)
 library(pheatmap, quietly = TRUE, warn.conflicts = FALSE)
 library(viridis, quietly = TRUE, warn.conflicts = FALSE)
 
+install.packages("ape")
+
 # utilidades
 # indx <- sapply(numeric_datos, is.factor)
 # numeric_datos[indx] <- lapply(numeric_datos[indx], function(x) as.numeric(as.character(x)))
@@ -47,7 +49,6 @@ table_percNone <- function(in_str, in_sample) {
         colnames(aa) <- NULL
         matrix_sample_n[i, 1] <- id_sample[i]
         matrix_sample_n[i, 2] <- round(as.numeric(table(df_tmp[1, ] == "None")[2]) / 10, 2)
-        matrix_sample_n[matrix_sample_n[, 2] == "NA"] <- "0"
     }
 
     df_str_none <- data.frame(
@@ -55,6 +56,7 @@ table_percNone <- function(in_str, in_sample) {
         PerNone = as.numeric(matrix_str_n[, 2])
     )
     print(df_str_none)
+
     df_sample_none <- data.frame(
         samples = as.character(matrix_sample_n[, 1]),
         PerNone = as.numeric(matrix_sample_n[, 2])
@@ -64,33 +66,46 @@ table_percNone <- function(in_str, in_sample) {
 
 table_percNone(long_mfalleles$STR, long_mfalleles$samples)
 
-
-
-id_sample <- unique(as.character(long_mfalleles$samples))
-matrix_sample_n <- matrix(0, nrow = length(id_sample), ncol = 2)
-for (i in 1:length(id_sample)) {
-    df_tmp <- as.matrix(mfalleles[mfalleles$X == id_sample[i], ])
-    colnames(aa) <- NULL
-    matrix_sample_n[i, 1] <- id_sample[i]
-    matrix_sample_n[i, 2] <- round(as.numeric(table(df_tmp[1, ] == "None")[2]) / 10, 2)
-    matrix_sample_n[matrix_sample_n[, 2] == "NA"] <- "0"
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # Eliminamos el STR3, STR1, STR4
+# Eliminamos las muestras 390, 350
+
+mf_filter<- mfalleles[-c(1,30), -c(3,5,6)]
+long_mf_filter <- melt(mf_filter, id.var = c("X"))
+colnames(long_mf_filter) <- c("samples", "STR", "alelles")
+long_mf_filter$alelles<- as.numeric(as.factor(long_mf_filter$alelles))
+
+wide_mf_filter <- as.data.frame(pivot_wider(long_mf_filter, names_from = "STR", values_from = "alelles", id_cols = "samples"))
+matrix_mf_filter<- as.matrix(wide_mf_filter[,-1])
+nombres<- c(
+"395",          "399",          "353_R_miseq"   , "403",         
+"407",          "351_R",          "347_R"         , "411",         
+"415",          "416",          "417"         , "418",         
+"419",          "420",          "353_novaseq"   , "431",         
+"435",          "438",          "353_R_novaseq" , "441",         
+"352",          "447",          "453"         , "349_R",         
+"457",          "345",          "347"         , "349",         
+"351",          "352",          "353_R_nanopore", "350_R")
+row.names(matrix_mf_filter)<- nombres
+
+# PCA
+modelo_pca1 <- prcomp(matrix_mf_filter, scale = FALSE)
+plot(modelo_pca1)
+summary(modelo_pca1)
+
+autoplot(modelo_pca1, loadings.label = TRUE, loadings.label.size = 3, loadings = TRUE, shape = T, label = T, label.size = 2.5)
+ggsave("plots/pca_str_samples.png", width = 18, height = 18, dpi = 300, units = c("cm"))
+
+# Hclustering
+
+## Matriz de distancias
+dist_mf_filter <- dist(matrix_mf_filter, method = "euclidean")
+## Clúster jerárquico
+hc_mf_filter<- hclust(dist_mf_filter)
+
+## Dendrograma
+png(file = "/home/alberto.lema/Documents/Desarrollo/Monkey-Pox-analysis/plots/hc_mf_filter.png")
+plot(as.dendrogram(hc_mf_filter), horiz = TRUE, cex = 0.5)
+dev.off()
 
 # Presence ausence data
 paalelles <- read.csv2("bin/03-all_alleles_presence.tsv", sep = "\t", header = T)
