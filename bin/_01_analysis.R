@@ -21,34 +21,75 @@ library(viridis, quietly = TRUE, warn.conflicts = FALSE)
 # indx <- sapply(numeric_datos, is.factor)
 # numeric_datos[indx] <- lapply(numeric_datos[indx], function(x) as.numeric(as.character(x)))
 
-# data 01
+# data 01 - alelos + frecuentes para cada muestra y STR
 mfalleles <- read.csv2("bin/01-most_frequent_alleles_seqs.tsv", sep = "\t", header = T)
 long_mfalleles <- melt(mfalleles, id.var = c("X"))
 colnames(long_mfalleles) <- c("samples", "STR", "Alelles")
 
 # calculo del 80%
-table_percNone<- function(in_str){
-    matrix_value<- matrix(0, nrow = 10, ncol = 2)
+table_percNone <- function(in_str, in_sample) {
     id_str <- unique(as.character(in_str))
-    for (i in 1:length(id_str)){
-        df_tmp<- long_mfalleles[long_mfalleles$STR == id_str[i] & long_mfalleles$Alelles == "None", ]
-        if(identical(df_tmp$sample, character(0))){
-            matrix_value[i,1]<- id_str[i]
-            matrix_value[i,2]<- 0
+    matrix_str_n <- matrix(0, nrow = length(id_str), ncol = 2)
+    for (i in 1:length(id_str)) {
+        df_tmp <- long_mfalleles[long_mfalleles$STR == id_str[i] & long_mfalleles$Alelles == "None", ]
+        if (identical(df_tmp$sample, character(0))) {
+            matrix_str_n[i, 1] <- id_str[i]
+            matrix_str_n[i, 2] <- 0
         } else {
-            matrix_value[i,1]<- id_str[i]
-            matrix_value[i,2]<- round(as.numeric(dim(df_tmp)[1]) / 34, 2)
+            matrix_str_n[i, 1] <- id_str[i]
+            matrix_str_n[i, 2] <- round(as.numeric(dim(df_tmp)[1]) / 34, 2)
         }
     }
+    id_sample <- unique(as.character(in_sample))
+    matrix_sample_n <- matrix(0, nrow = length(id_sample), ncol = 2)
+    for (i in 1:length(id_sample)) {
+        df_tmp <- as.matrix(mfalleles[mfalleles$X == id_sample[i], ])
+        colnames(aa) <- NULL
+        matrix_sample_n[i, 1] <- id_sample[i]
+        matrix_sample_n[i, 2] <- round(as.numeric(table(df_tmp[1, ] == "None")[2]) / 10, 2)
+        matrix_sample_n[matrix_sample_n[, 2] == "NA"] <- "0"
+    }
 
-    df_valores_none<- data.frame(
-        STR = as.character(matrix_value[,1]),
-        PerNone = as.numeric(matrix_value[,2]))
-    return(df_valores_none)
-
+    df_str_none <- data.frame(
+        STR = as.character(matrix_str_n[, 1]),
+        PerNone = as.numeric(matrix_str_n[, 2])
+    )
+    print(df_str_none)
+    df_sample_none <- data.frame(
+        samples = as.character(matrix_sample_n[, 1]),
+        PerNone = as.numeric(matrix_sample_n[, 2])
+    )
+    print(df_sample_none)
 }
 
-table_percNone(long_mfalleles$STR)
+table_percNone(long_mfalleles$STR, long_mfalleles$samples)
+
+
+
+id_sample <- unique(as.character(long_mfalleles$samples))
+matrix_sample_n <- matrix(0, nrow = length(id_sample), ncol = 2)
+for (i in 1:length(id_sample)) {
+    df_tmp <- as.matrix(mfalleles[mfalleles$X == id_sample[i], ])
+    colnames(aa) <- NULL
+    matrix_sample_n[i, 1] <- id_sample[i]
+    matrix_sample_n[i, 2] <- round(as.numeric(table(df_tmp[1, ] == "None")[2]) / 10, 2)
+    matrix_sample_n[matrix_sample_n[, 2] == "NA"] <- "0"
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Eliminamos el STR3, STR1, STR4
 
 # Presence ausence data
@@ -85,8 +126,10 @@ df_sep_sp <- data.frame(
 `%notin%` <- Negate(`%in%`)
 
 # Filtrar por los STR mayores del 80% de None
-str_mayor80<- c("STR3", "STR1", "STR4")
-df_sep_sp_filter<- df_sep_sp[df_sep_sp$STR %notin% str_mayor80,]
+str_mayor80 <- c("STR3", "STR1", "STR4")
+df_sep_sp_filter <- df_sep_sp[df_sep_sp$STR %notin% str_mayor80, ]
+
+# heatmap
 
 id_str <- unique(df_sep_sp_filter$STR)
 for (i in 1:length(id_str)) {
@@ -112,9 +155,24 @@ df_str11 <- df_sep_sp[df_sep_sp$STR == "STR11", ]
 alelos_str11 <- as.character(unique(df_str11$STR_alelles))
 color_str11 <- colorRampPalette(c("navy", "white", "firebrick3"))(length(alelos_str11))
 
-png(file = "/home/alberto.lema/Documents/Desarrollo/Monkey-Pox-analysis/plots/STR11.png", width = 600, height = 350)
+png(file = "/home/alberto.lema/Documents/Desarrollo/Monkey-Pox-analysis/plots/STR11_prueba.png", width = 600, height = 350)
 pheatmap(tmp_matrix, show_rownames = T, show_colnames = F, color = color_str11)
 dev.off()
+
+df_wide_full <- data.frame(pivot_wider(df_sep_sp, names_from = "STR_alelles", values_from = "CLR", id_cols = "sample"))
+full_matrix <- df_wide_full[, -1]
+rownames(full_matrix) <- muestras
+indx <- sapply(full_matrix, is.character) # transform to numeric
+full_matrix[indx] <- lapply(full_matrix[indx], function(x) as.numeric(x))
+
+modelo_pca1 <- prcomp(full_matrix, scale = FALSE)
+plot(modelo_pca1)
+summary(modelo_pca1)
+
+autoplot(modelo_pca1, loadings.label = TRUE, loadings.label.size = 3, loadings = TRUE, shape = T, label = T, label.size = 2.5)
+ggsave("plots/pca_str_samples.png", width = 18, height = 18, dpi = 300, units = c("cm"))
+
+
 
 # PCA
 modelo_pca1 <- prcomp(matrix_sp, scale = FALSE)
