@@ -17,7 +17,6 @@ library(ggfortify, quietly = TRUE, warn.conflicts = FALSE)
 library(pheatmap, quietly = TRUE, warn.conflicts = FALSE)
 library(viridis, quietly = TRUE, warn.conflicts = FALSE)
 
-colorRampPalette(c("navy", "white", "firebrick3"))(50)
 # utilidades
 # indx <- sapply(numeric_datos, is.factor)
 # numeric_datos[indx] <- lapply(numeric_datos[indx], function(x) as.numeric(as.character(x)))
@@ -26,6 +25,31 @@ colorRampPalette(c("navy", "white", "firebrick3"))(50)
 mfalleles <- read.csv2("bin/01-most_frequent_alleles_seqs.tsv", sep = "\t", header = T)
 long_mfalleles <- melt(mfalleles, id.var = c("X"))
 colnames(long_mfalleles) <- c("samples", "STR", "Alelles")
+
+# calculo del 80%
+table_percNone<- function(in_str){
+    matrix_value<- matrix(0, nrow = 10, ncol = 2)
+    id_str <- unique(as.character(in_str))
+    for (i in 1:length(id_str)){
+        df_tmp<- long_mfalleles[long_mfalleles$STR == id_str[i] & long_mfalleles$Alelles == "None", ]
+        if(identical(df_tmp$sample, character(0))){
+            matrix_value[i,1]<- id_str[i]
+            matrix_value[i,2]<- 0
+        } else {
+            matrix_value[i,1]<- id_str[i]
+            matrix_value[i,2]<- round(as.numeric(dim(df_tmp)[1]) / 34, 2)
+        }
+    }
+
+    df_valores_none<- data.frame(
+        STR = as.character(matrix_value[,1]),
+        PerNone = as.numeric(matrix_value[,2]))
+    return(df_valores_none)
+
+}
+
+table_percNone(long_mfalleles$STR)
+# Eliminamos el STR3, STR1, STR4
 
 # Presence ausence data
 paalelles <- read.csv2("bin/03-all_alleles_presence.tsv", sep = "\t", header = T)
@@ -57,9 +81,16 @@ df_sep_sp <- data.frame(
     CLR = data_sep_sp$CLR
 )
 
-id_str <- unique(df_sep_sp$STR)
+# negative
+`%notin%` <- Negate(`%in%`)
+
+# Filtrar por los STR mayores del 80% de None
+str_mayor80<- c("STR3", "STR1", "STR4")
+df_sep_sp_filter<- df_sep_sp[df_sep_sp$STR %notin% str_mayor80,]
+
+id_str <- unique(df_sep_sp_filter$STR)
 for (i in 1:length(id_str)) {
-    tmp_df <- df_sep_sp[df_sep_sp$STR == id_str[i], ]
+    tmp_df <- df_sep_sp[df_sep_sp_filter$STR == id_str[i], ]
     alelos_tmp <- as.character(unique(tmp_df$STR_alelles))
     color_tmp <- colorRampPalette(c("navy", "white", "firebrick3"))(length(alelos_tmp))
     tmp_df_wide <- data.frame(pivot_wider(tmp_df, names_from = "STR_alelles", values_from = "CLR", id_cols = "sample"))
