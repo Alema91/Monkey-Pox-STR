@@ -16,8 +16,7 @@ library(reshape2, quietly = TRUE, warn.conflicts = FALSE)
 library(ggfortify, quietly = TRUE, warn.conflicts = FALSE)
 library(pheatmap, quietly = TRUE, warn.conflicts = FALSE)
 library(viridis, quietly = TRUE, warn.conflicts = FALSE)
-
-install.packages("ape")
+library(ggdendro, quietly = TRUE, warn.conflicts = FALSE)
 
 # utilidades
 # indx <- sapply(numeric_datos, is.factor)
@@ -69,23 +68,24 @@ table_percNone(long_mfalleles$STR, long_mfalleles$samples)
 # Eliminamos el STR3, STR1, STR4
 # Eliminamos las muestras 390, 350
 
-mf_filter<- mfalleles[-c(1,30), -c(3,5,6)]
+mf_filter <- mfalleles[-c(1, 30), -c(3, 5, 6)]
 long_mf_filter <- melt(mf_filter, id.var = c("X"))
 colnames(long_mf_filter) <- c("samples", "STR", "alelles")
-long_mf_filter$alelles<- as.numeric(as.factor(long_mf_filter$alelles))
+long_mf_filter$alelles <- as.numeric(as.factor(long_mf_filter$alelles))
 
 wide_mf_filter <- as.data.frame(pivot_wider(long_mf_filter, names_from = "STR", values_from = "alelles", id_cols = "samples"))
-matrix_mf_filter<- as.matrix(wide_mf_filter[,-1])
-nombres<- c(
-"395",          "399",          "353_R_miseq"   , "403",         
-"407",          "351_R",          "347_R"         , "411",         
-"415",          "416",          "417"         , "418",         
-"419",          "420",          "353_novaseq"   , "431",         
-"435",          "438",          "353_R_novaseq" , "441",         
-"352",          "447",          "453"         , "349_R",         
-"457",          "345",          "347"         , "349",         
-"351",          "352",          "353_R_nanopore", "350_R")
-row.names(matrix_mf_filter)<- nombres
+matrix_mf_filter <- as.matrix(wide_mf_filter[, -1])
+nombres <- c(
+    "395",          "399",          "353_R_miseq", "403",
+    "407",          "351_R",          "347_R", "411",
+    "415",          "416",          "417", "418",
+    "419",          "420",          "353_novaseq", "431",
+    "435",          "438",          "353_R_novaseq", "441",
+    "352",          "447",          "453", "349_R",
+    "457",          "345",          "347", "349",
+    "351",          "352",          "353_R_nanopore", "350_R"
+)
+row.names(matrix_mf_filter) <- nombres
 
 # PCA
 modelo_pca1 <- prcomp(matrix_mf_filter, scale = FALSE)
@@ -98,24 +98,25 @@ ggsave("plots/pca_str_samples.png", width = 18, height = 18, dpi = 300, units = 
 # Hclustering
 
 ## Matriz de distancias
-dist_mf_filter <- dist(matrix_mf_filter, method = "euclidean")
+dist_mf_filter <- dist(matrix_mf_filter, method = "manhattan")
 ## Clúster jerárquico
-hc_mf_filter<- hclust(dist_mf_filter)
+hc_mf_filter <- hclust(dist_mf_filter)
 
 ## Dendrograma
-png(file = "/home/alberto.lema/Documents/Desarrollo/Monkey-Pox-analysis/plots/hc_mf_filter.png")
-plot(as.dendrogram(hc_mf_filter), horiz = TRUE, cex = 0.5)
+png(file = "/home/alberto.lema/Documents/Desarrollo/Monkey-Pox-analysis/plots/hc_mf_filter.png", height = 400, width = 500)
+ggdendrogram(hc_mf_filter, rotate = T, type = "rectangle")
 dev.off()
 
-# Presence ausence data
-paalelles <- read.csv2("bin/03-all_alleles_presence.tsv", sep = "\t", header = T)
+# data 02 - alelos + frecuentes para cada muestra y STR
+afalleles <- read.csv2("bin/02-most_frequent_alleles_freqs.tsv", sep = ",", header = T)
+af_filter <- afalleles[-c(1, 30), -c(3, 5, 6)]
+matrix_af <- af_filter[, -1]
 
-# matrix con los valores de muestras vs STR_alelos
-muestras <- as.character(paalelles[, 1])
-matrix_pa <- as.matrix(paalelles[, -1])
+indx <- sapply(matrix_af, is.character)
+matrix_af[indx] <- lapply(matrix_af[indx], function(x) as.numeric(as.character(x)))
 
-# heatmap presencia vs ausencia
-pheatmap(matrix_pa)
+# heatmap
+pheatmap(matrix_af, show_rownames = T, show_colnames = T, color = viridis(50))
 
 # CLR data
 supportclr <- read.csv2("bin/06-all_alleles_supporting_reads_CLR.tsv", sep = "\t", header = T)
