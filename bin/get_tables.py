@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 
+
+# USAGE: python get_tables.py [excel file] [outdir]
+# excel file: (required) excel file in excel format with the 
+# outdir: (optional, default: current dir) path to the dir where the output will be placed
+
 # Imports
 import os
 import sys
@@ -7,7 +12,6 @@ import json
 import pandas as pd
 from composition_stats import closure
 from composition_stats import clr
-
 
 # Required functions
 def get_STRS_samplelist(df):
@@ -123,6 +127,10 @@ def clr_df(df, pseudosum=0.000001):
 
 # Arguments
 raw_table = sys.argv[1]
+if len(sys.argv) == 2:
+    outdir = sys.argv[2]
+else:
+    outdir = "."
 
 # Import data
 raw_df = pd.read_excel(raw_table, index_col = "Sample_name")
@@ -131,18 +139,18 @@ raw_df = pd.read_excel(raw_table, index_col = "Sample_name")
 renamed_df, traduction_dict = encode_sequences(raw_df)
 
 # save enconding dict as json
-with open("Encoding_dict.json", "w") as outfile:
+with open(f"{outdir}/Encoding_dict.json", "w") as outfile:
     json.dump(traduction_dict, outfile)
 
 # tables for most frequent alleles
 df_mostfreqalleles_seqs, df_mostfreqalleles_freqs = most_frequent_alleles(renamed_df)
-df_mostfreqalleles_seqs.to_csv("01-most_frequent_alleles_seqs.tsv", sep = "\t")
-df_mostfreqalleles_freqs.to_csv("02-most_frequent_alleles_freqs.tsv")
+df_mostfreqalleles_seqs.to_csv(f"{outdir}/01-most_frequent_alleles_seqs.tsv", sep = "\t")
+df_mostfreqalleles_freqs.to_csv(f"{outdir}/02-most_frequent_alleles_freqs.tsv")
 
 # tables for all alleles
 df_alleles_binary, df_alleles_freq = all_alleles(renamed_df, "AlleleFrequency")
-df_alleles_binary.to_csv("03-all_alleles_presence.tsv", sep="\t")
-df_alleles_freq.to_csv("04-all_alleles_relfreq.tsv", sep="\t")
+df_alleles_binary.to_csv(f"{outdir}/03-all_alleles_presence.tsv", sep="\t")
+df_alleles_freq.to_csv(f"{outdir}/04-all_alleles_relfreq.tsv", sep="\t")
 
 # table for all alleles by supporting reads
 df_alleles_supporting_reads = all_alleles(renamed_df, "Supporting_reads")[1]
