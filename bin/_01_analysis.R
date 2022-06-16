@@ -14,10 +14,12 @@ library(pheatmap, quietly = TRUE, warn.conflicts = FALSE)
 library(viridis, quietly = TRUE, warn.conflicts = FALSE)
 library(ape, quietly = TRUE, warn.conflicts = FALSE)
 library(vegan, quietly = TRUE, warn.conflicts = FALSE)
+library(stringr, quietly = TRUE, warn.conflicts = FALSE)
 
 # utilidades
 # indx <- sapply(numeric_datos, is.factor)
 # numeric_datos[indx] <- lapply(numeric_datos[indx], function(x) as.numeric(as.character(x)))
+#`%notin%` <- Negate(`%in%`)
 
 # data 01 - alelos + frecuentes para cada muestra y STR
 mfalleles <- read.csv2("01-most_frequent_alleles_seqs.tsv", sep = "\t", header = T)
@@ -205,9 +207,36 @@ plot(hier_cl)
 dev.off()
 
 # intento de analizar con vegan package
+dsupport <- read.csv2("05-all_alleles_supporting_reads.tsv", sep = "\t", header = T)
+head(dsupport)
+#filtro 80
+long_dsup <- melt(dsupport, id.var = c("X"))
+colnames(long_dsup) <- c("samples", "STR", "alelles")
+long_dsup$strclass<- as.character(str_split(long_dsup$samples, "_", simplify = T)[,1])
+filtro_str<- dsup_filter[dsup_filter$strclass %notin% c("STR3", "STR1", "STR4"), ]
+filtro_samples<- filtro_str[filtro_str$STR %notin% c("X350.0", "X390.0"), ]
+filter_dsup<- filtro_samples
+filter_w_dsup<- as.data.frame(pivot_wider(filter_dsup, names_from = "STR", values_from = "alelles", id_cols = "samples"))
 
-data(dune)
-ord<- decorana(dune)
-ord
-plot(ord)
-plot(hier_cl)
+nombres_alelle<- as.character(filter_w_dsup$samples)
+matrix_sup<- filter_w_dsup[,-1]
+indx <- sapply(matrix_sup, is.character)
+matrix_sup[indx] <- lapply(matrix_sup[indx], function(x) as.numeric(x))
+nombres_samples<-c(
+"S_395"    ,      "S_399"    ,      "S_353_R_miseq"    ,"S_403",
+"S_407"    ,      "S_351_R"    ,      "S_347_R"          ,"S_411",
+"S_415"    ,      "S_416"    ,      "S_417"          ,"S_418",
+"S_419"    ,      "S_420"    ,      "S_353_novaseq"    ,"S_431",
+"S_435"    ,      "S_438"    ,      "S_353_R_novaseq"  ,"S_441",
+"S_352_R"    ,      "S_447"    ,      "S_453"          ,"S_349_R",
+"S_457"    ,      "S_345"    ,      "S_347"          ,"S_349",
+"S_351"    ,      "S_352"    ,      "S_353_R_nanopore" ,"S_350_R"
+)
+colnames(matrix_sup)<- nombres_samples
+
+#MetaMDS
+ord_str <- metaMDS(matrix_sup)
+plot(ord_str, type = "n")
+points(ord_str, display = "sites", cex = 0.8, pch=21, col="red", bg="yellow")
+text(ord_str, display = "spec", cex=0.7, col="blue")
+
