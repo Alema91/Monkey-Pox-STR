@@ -15,6 +15,7 @@ library(viridis, quietly = TRUE, warn.conflicts = FALSE)
 library(ape, quietly = TRUE, warn.conflicts = FALSE)
 library(vegan, quietly = TRUE, warn.conflicts = FALSE)
 library(stringr, quietly = TRUE, warn.conflicts = FALSE)
+library(ecodist, quietly = TRUE, warn.conflicts = FALSE)
 
 # utilidades
 # indx <- sapply(numeric_datos, is.factor)
@@ -206,37 +207,61 @@ png(file = "C:/Users/alber/Desktop/Desarrollo/Monkey-Pox-STR/plots/hierclust.png
 plot(hier_cl)
 dev.off()
 
-# intento de analizar con vegan package
-dsupport <- read.csv2("05-all_alleles_supporting_reads.tsv", sep = "\t", header = T)
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+
+# intento de analizar: https://archetypalecology.wordpress.com/2018/02/19/principal-coordinates-analysis-pcoa-in-r/
+dsupport <- read.csv2("../data/data_parsed/05-all_alleles_supporting_reads.tsv", sep = "\t", header = T)
 head(dsupport)
 #filtro 80
 long_dsup <- melt(dsupport, id.var = c("X"))
 colnames(long_dsup) <- c("samples", "STR", "alelles")
 long_dsup$strclass<- as.character(str_split(long_dsup$samples, "_", simplify = T)[,1])
-filtro_str<- dsup_filter[dsup_filter$strclass %notin% c("STR3", "STR1", "STR4"), ]
+filtro_str<- long_dsup[long_dsup$strclass %notin% c("STR3", "STR1", "STR4"), ]
 filtro_samples<- filtro_str[filtro_str$STR %notin% c("X350.0", "X390.0"), ]
 filter_dsup<- filtro_samples
 filter_w_dsup<- as.data.frame(pivot_wider(filter_dsup, names_from = "STR", values_from = "alelles", id_cols = "samples"))
 
+#data final
 nombres_alelle<- as.character(filter_w_dsup$samples)
+nombres_samples<- colnames(filter_w_dsup)
 matrix_sup<- filter_w_dsup[,-1]
 indx <- sapply(matrix_sup, is.character)
 matrix_sup[indx] <- lapply(matrix_sup[indx], function(x) as.numeric(x))
-nombres_samples<-c(
-"S_395"    ,      "S_399"    ,      "S_353_R_miseq"    ,"S_403",
-"S_407"    ,      "S_351_R"    ,      "S_347_R"          ,"S_411",
-"S_415"    ,      "S_416"    ,      "S_417"          ,"S_418",
-"S_419"    ,      "S_420"    ,      "S_353_novaseq"    ,"S_431",
-"S_435"    ,      "S_438"    ,      "S_353_R_novaseq"  ,"S_441",
-"S_352_R"    ,      "S_447"    ,      "S_453"          ,"S_349_R",
-"S_457"    ,      "S_345"    ,      "S_347"          ,"S_349",
-"S_351"    ,      "S_352"    ,      "S_353_R_nanopore" ,"S_350_R"
-)
-colnames(matrix_sup)<- nombres_samples
 
-#MetaMDS
-ord_str <- metaMDS(matrix_sup)
-plot(ord_str, type = "n")
-points(ord_str, display = "sites", cex = 0.8, pch=21, col="red", bg="yellow")
-text(ord_str, display = "spec", cex=0.7, col="blue")
+#Distancias
+t_matrix_sup<- t(matrix_sup)
+
+dist_sup_t<- vegdist(t_matrix_sup, method = "bray") # Braycurtis
+dist_sup_n<- vegdist(matrix_sup, method = "bray") # Braycurtis
+
+#PCOA
+modelo_pcoa1 <- pco(dist_sup_t, negvals = "zero", dround = 0)
+plot(modelo_pcoa1$vectors[,1], modelo_pcoa1$vectors[,2], type = "n", xlab = "PCoA1", ylab = "PCoA2",
+ axes = TRUE, main = "")
+text(modelo_pcoa1$vectors[,1], modelo_pcoa1$vectors[,2], labels(dist_sup_t), 
+cex = 0.9, xpd = TRUE)
+
+#PCA
+modelo_pca1 <- prcomp(dist_sup_t, scale = FALSE)
+plot(modelo_pca1)
+summary(modelo_pca1)
+
+autoplot(modelo_pca1, loadings.label = TRUE, loadings.label.size = 3, loadings = TRUE, shape = T, label = T, label.size = 2.5)
+ggsave("../plots/pca_str_samples.png", width = 18, height = 18, dpi = 300, units = c("cm"))
+
+# heatmap
+matrix_dist_sup<- as.matrix(dist_sup)
+png(file = "../plots/heatmap_support_reads.png")
+pheatmap(matrix_dist_sup, clustering_method = 'complete', color = viridis(50))
+dev.off()
+
+#clustering
+hc_sup_disimilarity<- hclust(dist_sup)
+png(file = "../plots/clustering_support_reads.png")
+plot(as.phylo(hc_sup_disimilarity))
+dev.off()
+
+
 
