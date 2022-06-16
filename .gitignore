@@ -11,8 +11,8 @@ plots
 outdate_data
 
 # files
-.tsv
-.csv
-.png
-.xlsx
--json
+*.tsv
+*.csv
+*.png
+*.xlsx
+*.json
