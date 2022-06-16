@@ -5,25 +5,22 @@
 library(plyr, quietly = TRUE, warn.conflicts = FALSE)
 library(dplyr, quietly = TRUE, warn.conflicts = FALSE)
 library(tidyr, quietly = TRUE, warn.conflicts = FALSE)
-library(tibble, quietly = TRUE, warn.conflicts = FALSE)
-library(readxl, quietly = TRUE, warn.conflicts = FALSE)
-library(tibble, quietly = TRUE, warn.conflicts = FALSE)
 library(ggplot2, quietly = TRUE, warn.conflicts = FALSE)
 library(forcats, quietly = TRUE, warn.conflicts = FALSE)
 library(gridExtra, quietly = TRUE, warn.conflicts = FALSE)
-library(patchwork, quietly = TRUE, warn.conflicts = FALSE)
 library(reshape2, quietly = TRUE, warn.conflicts = FALSE)
 library(ggfortify, quietly = TRUE, warn.conflicts = FALSE)
 library(pheatmap, quietly = TRUE, warn.conflicts = FALSE)
 library(viridis, quietly = TRUE, warn.conflicts = FALSE)
-library(ggdendro, quietly = TRUE, warn.conflicts = FALSE)
+library(ape, quietly = TRUE, warn.conflicts = FALSE)
+library(vegan, quietly = TRUE, warn.conflicts = FALSE)
 
 # utilidades
 # indx <- sapply(numeric_datos, is.factor)
 # numeric_datos[indx] <- lapply(numeric_datos[indx], function(x) as.numeric(as.character(x)))
 
 # data 01 - alelos + frecuentes para cada muestra y STR
-mfalleles <- read.csv2("bin/01-most_frequent_alleles_seqs.tsv", sep = "\t", header = T)
+mfalleles <- read.csv2("01-most_frequent_alleles_seqs.tsv", sep = "\t", header = T)
 long_mfalleles <- melt(mfalleles, id.var = c("X"))
 colnames(long_mfalleles) <- c("samples", "STR", "Alelles")
 
@@ -45,7 +42,6 @@ table_percNone <- function(in_str, in_sample) {
     matrix_sample_n <- matrix(0, nrow = length(id_sample), ncol = 2)
     for (i in 1:length(id_sample)) {
         df_tmp <- as.matrix(mfalleles[mfalleles$X == id_sample[i], ])
-        colnames(aa) <- NULL
         matrix_sample_n[i, 1] <- id_sample[i]
         matrix_sample_n[i, 2] <- round(as.numeric(table(df_tmp[1, ] == "None")[2]) / 10, 2)
     }
@@ -85,7 +81,7 @@ nombres <- c(
     "457",          "345",          "347", "349",
     "351",          "352",          "353_R_nanopore", "350_R"
 )
-row.names(matrix_mf_filter) <- nombres
+row.names(matrix_mf_filter) <- as.character(nombres)
 
 # PCA
 modelo_pca1 <- prcomp(matrix_mf_filter, scale = FALSE)
@@ -93,7 +89,7 @@ plot(modelo_pca1)
 summary(modelo_pca1)
 
 autoplot(modelo_pca1, loadings.label = TRUE, loadings.label.size = 3, loadings = TRUE, shape = T, label = T, label.size = 2.5)
-ggsave("plots/pca_str_samples.png", width = 18, height = 18, dpi = 300, units = c("cm"))
+ggsave("../plots/pca_str_samples.png", width = 18, height = 18, dpi = 300, units = c("cm"))
 
 # Hclustering
 
@@ -103,8 +99,8 @@ dist_mf_filter <- dist(matrix_mf_filter, method = "manhattan")
 hc_mf_filter <- hclust(dist_mf_filter)
 
 ## Dendrograma
-png(file = "/home/alberto.lema/Documents/Desarrollo/Monkey-Pox-analysis/plots/hc_mf_filter.png", height = 400, width = 500)
-ggdendrogram(hc_mf_filter, rotate = T, type = "rectangle")
+png(file = "C:/Users/alber/Desktop/Desarrollo/Monkey-Pox-STR/plots/str_hclust.png", height = 400, width = 500)
+plot(as.phylo(hc_mf_filter), cex = 0.6, label.offset = 0.5)
 dev.off()
 
 # data 02 - alelos + frecuentes para cada muestra y STR
@@ -188,8 +184,6 @@ summary(modelo_pca1)
 autoplot(modelo_pca1, loadings.label = TRUE, loadings.label.size = 3, loadings = TRUE, shape = T, label = T, label.size = 2.5)
 ggsave("plots/pca_str_samples.png", width = 18, height = 18, dpi = 300, units = c("cm"))
 
-
-
 # PCA
 modelo_pca1 <- prcomp(matrix_sp, scale = FALSE)
 plot(modelo_pca1)
@@ -210,58 +204,10 @@ png(file = "C:/Users/alber/Desktop/Desarrollo/Monkey-Pox-STR/plots/hierclust.png
 plot(hier_cl)
 dev.off()
 
-########################################################################################################################################################################
-########################################################################################################################################################################
-########################################################################################################################################################################
+# intento de analizar con vegan package
 
-
-# tengo que cambiar la tabla a long y despues otra vez a wide
-
-df_melt <- melt(datos, id.var = c("X"))
-df_melt$value <- as.numeric(as.factor(df_melt$value))
-
-df_wide <- pivot_wider(df_melt, names_from = "variable", values_from = "value", id_cols = "X")
-
-# Intento de PCA
-
-df_wide <- data.frame(df_wide)
-
-matrix_table <- as.matrix(df_wide[, -1])
-row.names(matrix_table) <- as.character(df_wide[, 1])
-
-modelo_pca1 <- prcomp(matrix_table, scale = FALSE)
-plot(modelo_pca1)
-summary(modelo_pca1)
-
-# Plot PCA
-
-autoplot(modelo_pca1, data = ndatos, loadings.label = TRUE, loadings.label.size = 3, loadings = TRUE, shape = T, label = T, label.size = 2.5)
-ggsave("plots/pca_str_samples.png", width = 18, height = 18, dpi = 300, units = c("cm"))
-
-# heatmap
-
-heatmap(matrix_table)
-
-# intento de hierathical clustering
-
-# dataset
-
-matrix_table <- as.matrix(df_wide[, -1])
-row.names(matrix_table) <- as.character(df_wide[, 1])
-
-# Finding distance matrix
-distance_mat <- dist(matrix_table, method = "euclidean")
-
-# Fitting Hierarchical clustering Model
-# to training dataset
-set.seed(240)
-hier_cl <- hclust(distance_mat, method = "average")
-hier_cl
-
-# Plotting dendrogram
+data(dune)
+ord<- decorana(dune)
+ord
+plot(ord)
 plot(hier_cl)
-
-# plot heatmap
-png(file = "/home/alberto.lema/Documents/Desarrollo/Monkey-Pox-analysis/plots/eeeheatmap.png", width = 600, height = 350)
-pheatmap(matrix_table, cluster_rows = T, cluster_cols = T)
-dev.off()
